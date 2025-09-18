@@ -1,0 +1,49 @@
+name: Publish to GHCR
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_name:
+        description: 'Override the destination image name (default ghcr.io/<owner>/projectsend)'
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ secrets.GHCR_USERNAME }}
+          password: ${{ secrets.GHCR_TOKEN }}
+
+      - name: Resolve image name
+        id: resolve
+        run: |
+          image_name="${{ github.event.inputs.image_name }}"
+          if [ -z "$image_name" ]; then
+            owner="${{ github.repository_owner }}"
+            image_name="ghcr.io/${owner,,}/projectsend"
+          fi
+          echo "image=$image_name" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ steps.resolve.outputs.image }}:latest
+            ${{ steps.resolve.outputs.image }}:${{ github.sha }}

@@ -1,0 +1,48 @@
+services:
+  projectsend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: projectsend/app:local
+    depends_on:
+      projectsend-db:
+        condition: service_healthy
+    environment:
+      PROJECTSEND_DB_HOST: projectsend-db
+      PROJECTSEND_DB_NAME: projectsend
+      PROJECTSEND_DB_USER: projectsend
+      PROJECTSEND_DB_PASSWORD: projectsend
+      PROJECTSEND_DB_TABLE_PREFIX: tbl_
+      PROJECTSEND_SITE_LANG: en
+      PROJECTSEND_SITE_TITLE: ProjectSend
+      PROJECTSEND_BASE_URI: http://localhost:8080/
+      PROJECTSEND_ADMIN_NAME: ProjectSend Administrator
+      PROJECTSEND_ADMIN_USERNAME: admin
+      PROJECTSEND_ADMIN_PASSWORD: change-this-password
+      PROJECTSEND_ADMIN_EMAIL: admin@example.com
+      PROJECTSEND_RUN_DB_UPGRADES: "1"
+      PROJECTSEND_DEBUG: "false"
+    ports:
+      - "8080:80"
+    volumes:
+      - ./projectsend/projectsend/config:/config
+      - ./projectsend/projectsend/upload:/var/www/html/upload
+      - ./projectsend/projectsend/temp:/var/www/html/temp
+    restart: unless-stopped
+
+  projectsend-db:
+    image: mariadb:10.11
+    environment:
+      MARIADB_DATABASE: projectsend
+      MARIADB_USER: projectsend
+      MARIADB_PASSWORD: projectsend
+      MARIADB_ROOT_PASSWORD: change-this-root-password
+    volumes:
+      - ./projectsend/database:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
