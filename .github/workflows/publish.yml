@@ -29,14 +29,15 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-
       - name: Resolve image name
         id: resolve
         run: |
-          image_name="${{ github.event.inputs.image_name }}"
-          if [ -z "$image_name" ]; then
-            owner="${{ github.repository_owner }}"
-            image_name="ghcr.io/${owner,,}/projectsend"
+          image_input="${{ github.event.inputs.image_name }}"
+          if [ -z "$image_input" ]; then
+            owner="${GITHUB_REPOSITORY_OWNER,,}"
+            image_name="ghcr.io/${owner}/projectsend"
+          else
+            image_name="${image_input,,}"
           fi
           echo "image=$image_name" >> "$GITHUB_OUTPUT"
 
