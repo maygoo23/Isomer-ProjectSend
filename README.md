@@ -15,14 +15,17 @@ This repository packages [ProjectSend](https://www.projectsend.org/) with a hard
 > Requirements: Docker 24+ with Compose plugin, at least 2 GB RAM, and a free TCP port 8080.
 
 ```bash
-# Clone the repository
- git clone https://github.com/<your-org-or-user>/projectsend-docker.git
- cd projectsend-docker
+# Grab the compose bundle
+ git clone https://github.com/maygoo23/isomer-projectsend.git
+ cd isomer-projectsend
+
+# (Optional) pre-pull the image (Compose will pull automatically if missing)
+ docker pull ghcr.io/maygoo23/isomer-projectsend:latest
 
 # (Optional) override defaults before first start
 #   export PROJECTSEND_ADMIN_PASSWORD=your-strong-password
 
-# Launch the stack
+# Launch the stack using the published image
  docker compose up -d
 
 # Tail the logs once to confirm everything is healthy
@@ -52,15 +55,12 @@ Back up those folders to capture the full instance state.
 
 ## docker-compose.yml Overview
 
-The included Compose file builds the image locally and runs MariaDB alongside it:
+The included Compose file pulls the GHCR image and runs MariaDB alongside it:
 
 ```yaml
 services:
   projectsend:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: projectsend/app:local
+    image: ghcr.io/maygoo23/isomer-projectsend:latest
     depends_on:
       projectsend-db:
         condition: service_healthy
@@ -116,17 +116,14 @@ services:
 A manual workflow lives at `.github/workflows/publish.yml`.  It:
 
 1. Checks out the repository.
-2. Logs in to `ghcr.io` with repository secrets.
+2. Logs in to `ghcr.io` with the built-in `GITHUB_TOKEN`.
 3. Builds the Docker image with Buildx.
-4. Pushes `ghcr.io/<owner>/projectsend:latest` and `ghcr.io/<owner>/projectsend:<git-sha>`.
+4. Pushes `ghcr.io/maygoo23/isomer-projectsend:latest` and `ghcr.io/maygoo23/isomer-projectsend:<git-sha>`.
 
 ### Set up once
 
-1. Create a **Classic** personal access token with the `write:packages` scope.
-2. In your GitHub repository settings, add secrets:
-   - `GHCR_USERNAME` – usually your GitHub username or org.
-   - `GHCR_TOKEN` – the PAT created above.
-3. (Optional) set `IMAGE_NAME` in `workflow_dispatch` when running the job to override the default name.
+No extra secrets are required—the workflow already requests `packages: write` and uses the default GitHub token.
+(Optional) When triggering the workflow you can provide a custom image name; it will be lowercased automatically.
 
 ### Run the workflow
 
@@ -135,7 +132,7 @@ Open the **Actions** tab → **Publish to GHCR** → **Run workflow**, choose th
 Consumers can then pull with:
 
 ```bash
-docker pull ghcr.io/<owner>/projectsend:latest
+docker pull ghcr.io/maygoo23/isomer-projectsend:latest
 ```
 
 ## Development Tips
