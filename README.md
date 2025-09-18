@@ -60,7 +60,7 @@ The included Compose file pulls the GHCR image and runs MariaDB alongside it:
 ```yaml
 services:
   projectsend:
-    image: ghcr.io/maygoo23/isomer-projectsend:latest
+    image: ghcr.io/maygoo23/projectsend:latest
     depends_on:
       projectsend-db:
         condition: service_healthy
